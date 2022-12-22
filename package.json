@@ -1,0 +1,22 @@
+{
+  "name": "analyze-service-repo-dependencies",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erik-rw/analyze-service-repo-dependencies.git"
+  },
+  "author": "Erik-RW <57436065+erik-rw@users.noreply.github.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erik-rw/analyze-service-repo-dependencies/issues"
+  },
+  "homepage": "https://github.com/erik-rw/analyze-service-repo-dependencies#readme",
+  "dependencies": {
+    "commander": "^9.4.1"
+  }
+}
