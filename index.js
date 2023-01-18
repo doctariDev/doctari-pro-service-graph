@@ -169,7 +169,11 @@ function analyze(serviceDirectories) {
     .flat();
 
   serviceFiles.forEach((serviceFile) => {
-    const serviceName = getServiceNameFromFile(serviceFile);
+    let serviceName = getServiceNameFromFile(serviceFile);
+    if (!!serviceMap[serviceName]) {
+      console.error(`Duplicate service name ${serviceName} found.`);
+      process.exit(1);
+    }
     serviceMap[serviceName] = [
       getReferences(serviceName, serviceFile, /([a-zA-Z]+Repository)/g),
       getReferences(serviceName, serviceFile, /([a-zA-Z]+Service)/g),
