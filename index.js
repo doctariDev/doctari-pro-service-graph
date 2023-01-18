@@ -21,16 +21,21 @@ program
     "<serviceDirectory>",
     "directory containing service files: *.Service.ts"
   )
-  .action((serviceDirectory) => {
-    analyze(serviceDirectory);
+  .action(() => {
+    const serviceDirectories = [...program.args];
+    serviceDirectories.shift();
+    console.log("serviceDirectories", serviceDirectories);
+    analyze(serviceDirectories);
   });
 
 program.parse();
 
-function analyze(serviceDirectory) {
-  if (!serviceDirectory.endsWith("/")) {
-    serviceDirectory += "/";
-  }
+function analyze(serviceDirectories) {
+  serviceDirectories = serviceDirectories.map((serviceDirectory) => {
+    return serviceDirectory.endsWith("/")
+      ? serviceDirectory
+      : serviceDirectory + "/";
+  });
 
   function findServices(directory) {
     return fs.readdirSync(directory).flatMap((file) => {
@@ -157,7 +162,8 @@ function analyze(serviceDirectory) {
 
   const serviceMap = {};
 
-  const serviceFiles = findServices(serviceDirectory);
+  const serviceFiles = serviceDirectories.map((serviceDirectory) =>
+    findServices(serviceDirectory)).flat();
 
   serviceFiles.forEach((serviceFile) => {
     const serviceName = getServiceNameFromFile(serviceFile);
