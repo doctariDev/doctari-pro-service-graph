@@ -43,7 +43,9 @@ function analyze(serviceDirectories) {
       if (fs.lstatSync(absolutePath).isDirectory()) {
         return findServices(absolutePath + "/");
       }
-      return file.endsWith("Service.ts") ? [absolutePath] : [];
+      return !/test/.test(file) && /.*Service.*\.ts$/.test(file)
+        ? [absolutePath]
+        : [];
     });
   }
 
@@ -162,8 +164,9 @@ function analyze(serviceDirectories) {
 
   const serviceMap = {};
 
-  const serviceFiles = serviceDirectories.map((serviceDirectory) =>
-    findServices(serviceDirectory)).flat();
+  const serviceFiles = serviceDirectories
+    .map((serviceDirectory) => findServices(serviceDirectory))
+    .flat();
 
   serviceFiles.forEach((serviceFile) => {
     const serviceName = getServiceNameFromFile(serviceFile);
