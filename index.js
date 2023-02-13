@@ -64,8 +64,17 @@ function analyze(serviceDirectories) {
   }
 
   function isIgnoredElement(element) {
-    const ignoredElements = ["wrapMigratedService", "AbstractRepository"];
-    return ignoredElements.filter((e) => e === element).length > 0;
+    const ignoredElements = [
+      "wrapMigratedService",
+      "AbstractRepository",
+      "wrapService",
+    ];
+    if (ignoredElements.filter((e) => e === element).length > 0) {
+      return true;
+    }
+    if (/migrated.*Service.*/.test(element)) {
+      return true;
+    }
   }
 
   const createDotFileContent = function (serviceMap, repositoryMap) {
@@ -195,6 +204,12 @@ function analyze(serviceDirectories) {
 
   const dotFileContent = `
 digraph MyGraph {
+  subgraph cluster1 {
+      migrated [style=filled, fillcolor="green"] ;
+      no_dependencies [style=filled, fillcolor="yellow"] ;
+      candidate_to_migrate [style=filled, fillcolor="orange"] ;
+      repo_multiple_owners [style=filled, fillcolor="purple"] ;
+  }
 ${createDotFileContent(serviceMap, repositoryMap)}
 }
 `;
