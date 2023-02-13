@@ -131,3 +131,5 @@ dist
 
 # IDEs
 .idea/
+services.dot
+services.png
