@@ -14,5 +14,5 @@ npm ci
 ## How to execute
 
 ```sh
-npm start analyze __FOOBAR__/functions/src/services/
+npm start analyze __FOO__/functions/src/services/ __FOO__/backend
 ```
