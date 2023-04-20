@@ -45,3 +45,7 @@ export function isCoveredByStory(element: string): boolean {
   ];
   return coveredByStory.filter((e) => e === element).length > 0;
 }
+
+export const assertNever = (value: never): never => {
+  throw new Error(`Failed never assertion for value ${value}`);
+};

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node index.ts",
-    "format": "npx prettier -w *.ts"
+    "format": "npx prettier -w *.ts **/*.ts"
   },
   "repository": {
     "type": "git",

@@ -1,10 +1,11 @@
 import { findServices, getReferences, getServiceNameFromFile } from "./files";
-import { createDotFileContent } from "./graph";
+import { createGraph } from "./graph";
+import { Renderer } from "./renderer";
 
 const fs = require("fs");
 const path = require("path");
 
-export function analyze(serviceDirectories: string[]) {
+export function analyze(serviceDirectories: string[], renderGraph: Renderer) {
   serviceDirectories = serviceDirectories.map((serviceDirectory) => {
     return serviceDirectory.endsWith("/")
       ? serviceDirectory
@@ -49,37 +50,7 @@ export function analyze(serviceDirectories: string[]) {
   console.log("repositoryMap");
   console.log(repositoryMap);
 
-  const dotFileContent = `
-  digraph MyGraph {
-    subgraph cluster1 {
-        migrated [style=filled, fillcolor="green"] ;
-        no_dependencies [style=filled, fillcolor="yellow"] ;
-        candidate_to_migrate [style=filled, fillcolor="orange"] ;
-        repo_multi_owners [style=filled, fillcolor="purple"] ;
-        service_multi_dependencies [style=filled, fillcolor="cyan"] ;
-        has_a_story [style="filled,dashed" fillcolor="white"] ;
-    }
-  ${createDotFileContent(serviceMap, repositoryMap)}
-  }
-  `;
-  fs.writeFileSync("./services.dot", dotFileContent);
+  const graph = createGraph(serviceMap, repositoryMap);
 
-  const { exec } = require("child_process");
-
-  exec("docker ps", (error: any, stdout: any, stderr: any) => {
-    if (error || stderr) {
-      console.error(`Docker seems to be missing or off: ${error} ${stderr}`);
-      process.exit(1);
-    }
-
-    exec(
-      "cat services.dot | docker run --rm -i nshine/dot > services.png",
-      (error: any, stdout: any, stderr: any) => {
-        if (error) {
-          console.error(`Dot execution failed: ${error} ${stderr}`);
-          process.exit(1);
-        }
-      }
-    );
-  });
+  renderGraph(graph);
 }

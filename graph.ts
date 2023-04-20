@@ -1,14 +1,5 @@
 import { isCoveredByStory, isIgnoredElement } from "./util";
 
-function writeFillcolor(content: string, serviceName: string, color: string) {
-  const shape = serviceName.indexOf("Repository") > -1 ? "box" : "ellipse";
-  const lineStyle = isCoveredByStory(serviceName) ? ",dashed" : ",solid";
-  return (
-    content +
-    `  ${serviceName} [ fillcolor="${color}" style="filled${lineStyle}" shape=${shape} ]
-`
-  );
-}
 function getOnlyOneRepoAsDependency(
   dependencies: string[]
 ): string | undefined {
@@ -45,20 +36,33 @@ function isMigrated(dependencies: string[]) {
   );
 }
 
-export function createDotFileContent(
+export type Element = {
+  name: string;
+  color: "white" | "green" | "yellow" | "orange" | "purple" | "cyan";
+  type: "service" | "repository";
+  isCoveredByStory: boolean;
+};
+
+export type Graph = {
+  nodes: { [name: string]: Element };
+  edges: { from: string; to: string }[];
+};
+
+export function createGraph(
   serviceMap: { [key: string]: string[] },
   repositoryMap: { [key: string]: string[] }
-) {
-  type Element = {
-    name: string;
-    color: "white" | "green" | "yellow" | "orange" | "purple" | "cyan";
-  };
-  const elements: { [key: string]: Element } = {};
+): Graph {
+  const elements: Graph["nodes"] = {};
   const addElement = function (name: string, color: Element["color"]) {
     if (elements[name]) {
       return;
     }
-    elements[name] = { name, color };
+    elements[name] = {
+      name,
+      color,
+      isCoveredByStory: isCoveredByStory(name),
+      type: name.indexOf("Repository") > -1 ? "repository" : "service",
+    };
   };
 
   // Color the service nodes and dependencies
@@ -118,12 +122,7 @@ export function createDotFileContent(
     addElement(repositoryName, "white");
   });
 
-  let content = "";
-  // Color nodes
-  Object.keys(elements).forEach((elementName) => {
-    const element = elements[elementName];
-    content = writeFillcolor(content, elementName, element.color);
-  });
+  const edges: Graph["edges"] = [];
 
   // Draw nodes and dependencies
   Object.keys(serviceMap).forEach((serviceName) => {
@@ -135,10 +134,12 @@ export function createDotFileContent(
       if (serviceName === dependency || isIgnoredElement(dependency)) {
         return;
       }
-      content += `  ${serviceName} -> ${dependency}
-  `;
+      edges.push({ from: serviceName, to: dependency });
     });
   });
 
-  return content;
+  return {
+    nodes: elements,
+    edges,
+  };
 }
