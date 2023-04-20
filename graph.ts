@@ -1,5 +1,9 @@
 import { isCoveredByStory, isIgnoredElement } from "./util";
 
+function isRepository(element: string): boolean {
+  return element.indexOf("Repository") > -1;
+}
+
 function getOnlyOneRepoAsDependency(
   dependencies: string[]
 ): string | undefined {
@@ -7,7 +11,7 @@ function getOnlyOneRepoAsDependency(
     (dependency) => !isIgnoredElement(dependency)
   );
   return relevantDependencies.length === 1 &&
-    relevantDependencies[0].indexOf("Repository") > -1
+    isRepository(relevantDependencies[0])
     ? relevantDependencies[0]
     : undefined;
 }
@@ -36,9 +40,28 @@ function isMigrated(dependencies: string[]) {
   );
 }
 
+function isFullyMigrated(dependencies: string[]) {
+  return (
+    dependencies.filter(
+      (dependency) => dependency === "wrapFullyMigratedService"
+    ).length > 0
+  );
+}
+
+enum NodeColor {
+  DEFAULT_COLOR = "white",
+  MIGRATED_COLOR = "#00FF00",
+  FULLY_MIGRATED_COLOR = "#008800",
+  NO_DEPENDENCIES_COLOR = "yellow",
+  CANDIDATE_COLOR = "orange",
+  REPO_MULTIPLE_OWNERS = "purple",
+  SERV_MULTIPLE_DEPENDENCIES = "cyan",
+  ERROR = "red",
+}
+
 export type Element = {
   name: string;
-  color: "white" | "green" | "yellow" | "orange" | "purple" | "cyan";
+  color: NodeColor;
   type: "service" | "repository";
   isCoveredByStory: boolean;
 };
@@ -74,15 +97,32 @@ export function createGraph(
 
       // Already migrated
       if (isMigrated(dependencies)) {
-        addElement(serviceName, "green");
+        const fullyMigrated = isFullyMigrated(dependencies);
+        const color = fullyMigrated
+          ? NodeColor.FULLY_MIGRATED_COLOR
+          : NodeColor.MIGRATED_COLOR;
+        addElement(serviceName, color);
         dependencies
           .filter((dependency) => !isIgnoredElement(dependency))
           .forEach((dependency) => {
-            addElement(dependency, "green");
+            // Mark repos of migrated services as migrated
+            if (isRepository(dependency)) {
+              addElement(dependency, NodeColor.MIGRATED_COLOR);
+            } else {
+              // Check service dependencies
+              // If a service is fully migrated, but one of its dependencies is not, mark the dependency as error
+              if (
+                fullyMigrated &&
+                isMigrated(serviceMap[dependency]) &&
+                !isFullyMigrated(serviceMap[dependency])
+              ) {
+                addElement(dependency, NodeColor.ERROR);
+              }
+            }
           });
       } else if (dependencies.length === 0) {
         // No dependencies
-        addElement(serviceName, "yellow");
+        addElement(serviceName, NodeColor.NO_DEPENDENCIES_COLOR);
       } else if (
         getOnlyOneRepoAsDependency(dependencies) &&
         isDependentRepoUsedOnlyByThisService(
@@ -92,11 +132,11 @@ export function createGraph(
         )
       ) {
         // Only one repository
-        addElement(serviceName, "orange");
+        addElement(serviceName, NodeColor.CANDIDATE_COLOR);
         dependencies
           .filter((dependency) => !isIgnoredElement(dependency))
           .forEach((dependency) => {
-            addElement(dependency, "orange");
+            addElement(dependency, NodeColor.CANDIDATE_COLOR);
           });
       }
     });
@@ -111,15 +151,15 @@ export function createGraph(
       (d) => !isIgnoredElement(d)
     );
     if (dependingOnRepository.length > 1) {
-      addElement(repositoryName, "purple");
+      addElement(repositoryName, NodeColor.REPO_MULTIPLE_OWNERS);
     } else if (dependingOnRepository.length <= 1) {
       dependingOnRepository.forEach((serviceName) => {
         if (Object.keys(elements).indexOf(serviceName) === -1) {
-          addElement(serviceName, "cyan");
+          addElement(serviceName, NodeColor.SERV_MULTIPLE_DEPENDENCIES);
         }
       });
     }
-    addElement(repositoryName, "white");
+    addElement(repositoryName, NodeColor.DEFAULT_COLOR);
   });
 
   const edges: Graph["edges"] = [];
