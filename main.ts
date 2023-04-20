@@ -1,5 +1,6 @@
 import { findServices, getReferences, getServiceNameFromFile } from "./files";
-import { createDotFileContent } from "./graph";
+import { createGraph } from "./graph";
+import { createDotFileContent } from "./renderer/graphviz";
 
 const fs = require("fs");
 const path = require("path");
@@ -49,19 +50,8 @@ export function analyze(serviceDirectories: string[]) {
   console.log("repositoryMap");
   console.log(repositoryMap);
 
-  const dotFileContent = `
-  digraph MyGraph {
-    subgraph cluster1 {
-        migrated [style=filled, fillcolor="green"] ;
-        no_dependencies [style=filled, fillcolor="yellow"] ;
-        candidate_to_migrate [style=filled, fillcolor="orange"] ;
-        repo_multi_owners [style=filled, fillcolor="purple"] ;
-        service_multi_dependencies [style=filled, fillcolor="cyan"] ;
-        has_a_story [style="filled,dashed" fillcolor="white"] ;
-    }
-  ${createDotFileContent(serviceMap, repositoryMap)}
-  }
-  `;
+  const graph = createGraph(serviceMap, repositoryMap);
+  const dotFileContent = createDotFileContent(graph);
   fs.writeFileSync("./services.dot", dotFileContent);
 
   const { exec } = require("child_process");
