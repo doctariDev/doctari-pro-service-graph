@@ -1,7 +1,9 @@
 import { Graph } from "../graph";
 import { assertNever } from "../util";
+import fs from "fs";
+import { exec } from "child_process";
 
-export function createDotFileContent(graph: Graph) {
+function createDotFileContent(graph: Graph) {
   const { nodes, edges } = graph;
 
   let content = "";
@@ -42,4 +44,32 @@ export function createDotFileContent(graph: Graph) {
     ${content}
   }
   `;
+}
+
+export function renderDotFile(graph: Graph) {
+  const dotFileContent = createDotFileContent(graph);
+  fs.writeFileSync("./services.dot", dotFileContent);
+}
+
+export function renderGraphviz(graph: Graph) {
+  renderDotFile(graph);
+
+  const { exec } = require("child_process");
+
+  exec("docker ps", (error: any, stdout: any, stderr: any) => {
+    if (error || stderr) {
+      console.error(`Docker seems to be missing or off: ${error} ${stderr}`);
+      process.exit(1);
+    }
+
+    exec(
+      "cat services.dot | docker run --rm -i nshine/dot > services.png",
+      (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          console.error(`Dot execution failed: ${error} ${stderr}`);
+          process.exit(1);
+        }
+      }
+    );
+  });
 }

@@ -1,11 +1,11 @@
 import { findServices, getReferences, getServiceNameFromFile } from "./files";
 import { createGraph } from "./graph";
-import { createDotFileContent } from "./renderer/graphviz";
+import { Renderer } from "./renderer";
 
 const fs = require("fs");
 const path = require("path");
 
-export function analyze(serviceDirectories: string[]) {
+export function analyze(serviceDirectories: string[], renderGraph: Renderer) {
   serviceDirectories = serviceDirectories.map((serviceDirectory) => {
     return serviceDirectory.endsWith("/")
       ? serviceDirectory
@@ -51,25 +51,6 @@ export function analyze(serviceDirectories: string[]) {
   console.log(repositoryMap);
 
   const graph = createGraph(serviceMap, repositoryMap);
-  const dotFileContent = createDotFileContent(graph);
-  fs.writeFileSync("./services.dot", dotFileContent);
 
-  const { exec } = require("child_process");
-
-  exec("docker ps", (error: any, stdout: any, stderr: any) => {
-    if (error || stderr) {
-      console.error(`Docker seems to be missing or off: ${error} ${stderr}`);
-      process.exit(1);
-    }
-
-    exec(
-      "cat services.dot | docker run --rm -i nshine/dot > services.png",
-      (error: any, stdout: any, stderr: any) => {
-        if (error) {
-          console.error(`Dot execution failed: ${error} ${stderr}`);
-          process.exit(1);
-        }
-      }
-    );
-  });
+  renderGraph(graph);
 }
