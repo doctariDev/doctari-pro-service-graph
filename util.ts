@@ -24,6 +24,8 @@ export function isCoveredByStory(element: string): boolean {
     "CandidateScoringService",
     "CVParsingService",
     "CandidateBlockedRepository",
+    "CandidateDocumentsRepository",
+    "CvParsingService",
     "CandidateDmsDocumentsService",
     "DeletedCandidateRepository",
     "RequestCampaignStateRepository",
