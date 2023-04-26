@@ -21,16 +21,19 @@ export function analyze(serviceDirectories: string[], renderGraph: Renderer) {
   serviceFiles.forEach((serviceFile) => {
     let serviceName = getServiceNameFromFile(serviceFile);
     if (!!serviceMap[serviceName]) {
-      console.error(`Duplicate service name ${serviceName} found.`);
+      console.error(`Duplicate service name ${serviceName} found: ${serviceFile}`);
       serviceName = `${path
         .dirname(serviceFile)
         .split("/")
         .pop()}-${serviceName}`;
+        console.log(serviceFiles);
+        process.exit(1);
     }
     serviceName = serviceName.replace(/-/g, "_");
     serviceMap[serviceName] = [
       getReferences(serviceName, serviceFile, /([a-zA-Z]+Repository)/g),
       getReferences(serviceName, serviceFile, /([a-zA-Z]+Service)/g),
+      getReferences(serviceName, serviceFile, /([a-zA-Z]+Facade)/g),
     ].flatMap((x) => x);
   });
   console.log("serviceMap");
