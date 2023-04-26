@@ -1,4 +1,4 @@
-import { Graph } from "../graph";
+import { Graph, NodeColor } from "../graph";
 import { assertNever } from "../util";
 import fs from "fs";
 import { exec } from "child_process";
@@ -34,11 +34,14 @@ function createDotFileContent(graph: Graph) {
   return `
   digraph MyGraph {
     subgraph cluster1 {
-        migrated [style=filled, fillcolor="green"] ;
-        no_dependencies [style=filled, fillcolor="yellow"] ;
-        candidate_to_migrate [style=filled, fillcolor="orange"] ;
-        repo_multi_owners [style=filled, fillcolor="purple"] ;
-        service_multi_dependencies [style=filled, fillcolor="cyan"] ;
+        migrated [style=filled, fillcolor="${NodeColor.MIGRATED_COLOR}"] ;
+        no_dependencies [style=filled, fillcolor="${NodeColor.NO_DEPENDENCIES_COLOR}"] ;
+        candidate_to_migrate [style=filled, fillcolor="${NodeColor.CANDIDATE_COLOR}"] ;
+        repo_multi_owners [style=filled, fillcolor="${NodeColor.REPO_MULTIPLE_OWNERS}"] ;
+        service_multi_dependencies [style=filled, fillcolor="${NodeColor.SERV_MULTIPLE_DEPENDENCIES}"] ;
+        fully_migrated [style="filled" fillcolor="${NodeColor.FULLY_MIGRATED_COLOR}"] ;
+        fully_migrated_candidate [style="filled" fillcolor="${NodeColor.FULLY_MIGRATED_CANDIDATE_COLOR}"] ;
+        looks_fishy [style="filled" fillcolor="${NodeColor.ERROR}"] ;
         has_a_story [style="filled,dashed" fillcolor="white"] ;
     }
     ${content}

@@ -31,6 +31,7 @@ function isDependentRepoUsedOnlyByThisService(
 
 function isMigrated(dependencies: string[]) {
   return (
+    dependencies &&
     dependencies.filter(
       (dependency) =>
         dependency === "wrapMigratedService" ||
@@ -48,10 +49,11 @@ function isFullyMigrated(dependencies: string[]) {
   );
 }
 
-enum NodeColor {
+export enum NodeColor {
   DEFAULT_COLOR = "white",
   MIGRATED_COLOR = "#00FF00",
   FULLY_MIGRATED_COLOR = "#008800",
+  FULLY_MIGRATED_CANDIDATE_COLOR = "#008888",
   NO_DEPENDENCIES_COLOR = "yellow",
   CANDIDATE_COLOR = "orange",
   REPO_MULTIPLE_OWNERS = "purple",
@@ -80,6 +82,7 @@ export function createGraph(
     if (elements[name]) {
       return;
     }
+    console.log(`Adding ${name} with color ${color}`)
     elements[name] = {
       name,
       color,
@@ -92,7 +95,7 @@ export function createGraph(
   Object.keys(serviceMap)
     .filter((dependency) => !isIgnoredElement(dependency))
     .forEach((serviceName) => {
-      const dependencies = serviceMap[serviceName];
+      const dependencies = serviceMap[serviceName] ?? [];
       console.log(serviceName, dependencies);
 
       // Already migrated
@@ -109,17 +112,22 @@ export function createGraph(
             if (isRepository(dependency)) {
               addElement(dependency, NodeColor.MIGRATED_COLOR);
             } else {
-              // Check service dependencies
-              // If a service is fully migrated, but one of its dependencies is not, mark the dependency as error
-              if (
-                fullyMigrated &&
-                isMigrated(serviceMap[dependency]) &&
-                !isFullyMigrated(serviceMap[dependency])
-              ) {
+              // A migrated service may not depend on a non-migrated service
+              if (!isMigrated(serviceMap[dependency])) {
                 addElement(dependency, NodeColor.ERROR);
               }
             }
           });
+      } else if (
+        isMigrated(dependencies) &&
+        !isFullyMigrated(dependencies) &&
+        dependencies.filter(
+          (dependency) =>
+            !isIgnoredElement(dependency) &&
+            isFullyMigrated(serviceMap[dependency])
+        )
+      ) {
+        addElement(serviceName, NodeColor.FULLY_MIGRATED_CANDIDATE_COLOR);
       } else if (dependencies.length === 0) {
         // No dependencies
         addElement(serviceName, NodeColor.NO_DEPENDENCIES_COLOR);
