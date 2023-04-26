@@ -18,6 +18,11 @@ export function isIgnoredElement(element: string): boolean {
 
 export function isCoveredByStory(element: string): boolean {
   const coveredByStory = [
+    "RequestReportingRepository",
+    "MessageFeedRepository",
+    "CandidateProfileSharesService",
+    "CandidateScoringService",
+    "CVParsingService",
     "CandidateBlockedRepository",
     "CandidateDmsDocumentsService",
     "DeletedCandidateRepository",
